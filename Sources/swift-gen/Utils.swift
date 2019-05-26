@@ -65,10 +65,14 @@ extension String {
 extension FileManager {
     
     func createDirectory(at url: URL) throws {
-                
-        if self.fileExists(atPath: url.path) {
-            try self.removeItem(at: url)
+        var isDirectory: ObjCBool = false
+        if self.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+            if !isDirectory.boolValue {
+                let underlyingError = NSError(domain: POSIXError.errorDomain, code: Int(POSIXErrorCode.ENOTDIR.rawValue))
+                throw CocoaError.error(.fileWriteUnknown, userInfo: [NSUnderlyingErrorKey: underlyingError], url: url)
+            }
+        } else {
+            try self.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
         }
-        try self.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
     }
 }
