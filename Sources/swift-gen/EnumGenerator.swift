@@ -52,5 +52,7 @@ class EnumGenerator {
         p.indent()
         p.print("returne nil\n")
         p.outdent()
+        p.outdent()
+        p.print("}\n")
     }
 }
