@@ -24,7 +24,7 @@ extension TType {
     func generateSwiftTypeName() -> String {
         let reval: String
         switch self.name {
-        case "map", "set", "byte", "binary":
+        case "map", "set", "byte", "void":
             fatalError("Unsupport type: \(self.name).")
         case "i16":
             reval = "Int16"
