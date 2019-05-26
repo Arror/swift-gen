@@ -3,11 +3,18 @@ import Foundation
 guard
     let json = CommandLine.arguments.dropFirst().first,
     let data = json.data(using: .utf8) else {
+        print("Thrift file data parse error.")
         exit(1)
 }
 
 do {
     let thrifts = try JSONDecoder().decode(TThrifts.self, from: data)
+    
+    guard
+        thrifts.version == "1.0" else {
+            print("Version of thrift 1.0 is required.")
+            exit(1)
+    }
     
     let dirURL = URL(fileURLWithPath: thrifts.output)
     
@@ -20,6 +27,7 @@ do {
     
     guard
         let thrift = thrifts.thrifts[thrifts.input] else {
+            print("Thrift file not found.")
             exit(1)
     }
     
@@ -34,7 +42,9 @@ do {
     try client.content.write(to: clientFileURL, atomically: true, encoding: .utf8)
     try server.content.write(to: serverFileURL, atomically: true, encoding: .utf8)
     
+    exit(0)
 } catch {
     print(error)
+    exit(1)
 }
 

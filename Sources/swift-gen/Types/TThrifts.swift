@@ -12,10 +12,12 @@ struct TThrifts: Codable {
     let input: String
     let output: String
     let thrifts: [String: TThrift]
+    let version: String
     
     private enum CodingKeys: String, CodingKey {
         case input      = "IP"
         case output     = "OP"
         case thrifts    = "TS"
+        case version    = "TV"
     }
 }
