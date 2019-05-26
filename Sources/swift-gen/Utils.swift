@@ -45,7 +45,7 @@ extension TType {
             }
             reval = "[\(TType(name: vt.name, keyType: .none, valueType: .none).generateSwiftTypeName())]"
         default:
-            reval = self.name
+            reval = "RT\(self.name)"
         }
         return reval
     }
@@ -68,8 +68,7 @@ extension FileManager {
                 
         if self.fileExists(atPath: url.path) {
             try self.removeItem(at: url)
-        } else {
-            try self.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
         }
+        try self.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
     }
 }

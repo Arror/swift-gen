@@ -39,6 +39,7 @@ class ServiceGenerator {
             }
             p.print("\n")
             p.print("public struct \(method.name.firstUppercased()): Codable {\n")
+            p.print("\n")
             p.indent()
             for field in method.arguments {
                 p.print("public let \(field.name): \(field.generateSwiftTypeName())\n")
@@ -48,11 +49,11 @@ class ServiceGenerator {
             
             p.print("\n")
             let arguments = method.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")
-            p.print("public static func \(method.name)(\(arguments)) throws -> RTRequest<\(s.name)\(method.name.firstUppercased()), String> {\n")
+            p.print("public static func \(method.name)(\(arguments)) throws -> RTRequest<\(s.name).\(method.name.firstUppercased()), \(rt.generateSwiftTypeName())> {\n")
             p.indent()
             p.print("return try RTRequest(\n")
             p.indent()
-            p.print("methd: \"\(s.name).\(method.name)\",\n")
+            p.print("method: \"\(s.name).\(method.name)\",\n")
             p.print("parameter: \(s.name).\(method.name.firstUppercased())(\(method.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
             p.print("responseType: \(rt.generateSwiftTypeName()).self\n")
             p.outdent()
@@ -86,8 +87,8 @@ class ServiceGenerator {
         for method in methods {
             p.print("@objc private func __\(method.name)(parameters: Data, completion: @escaping (Data) -> Void) {\n")
             p.indent()
-            p.print("let req = \(s.name)\(method.name.firstUppercased()).__rt_from(data: parameters)\n")
-            p.print("self.\(method.name)() { result in\n")
+            p.print("let req = \(s.name).\(method.name.firstUppercased()).__rt_from(data: parameters)\n")
+            p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): req.\($0.name)" }).joined(separator: ", "))) { result in\n")
             p.indent()
             p.print("completion(result.__rt_toData())\n")
             p.outdent()
