@@ -11,7 +11,7 @@ do {
     let thrifts = try JSONDecoder().decode(TThrifts.self, from: data)
     
     guard
-        thrifts.version == "1.0" else {
+        thrifts.version == "1.1" else {
             print("Version of thrift 1.0 is required.")
             exit(1)
     }
