@@ -26,18 +26,14 @@ class EnumGenerator {
             return lhs.value < rhs.value
         }
         p.print("\n")
-        p.print("public enum \(e.name): Int, Codable, CaseIterable {\n")
+        p.print("public enum RT\(e.name): Int, Codable, CaseIterable {\n")
         p.indent()
         p.print("\n")
         values.forEach { v in
             p.print("case \(v.name) = \(v.value)\n")
         }
         p.print("\n")
-        p.print("public init?(rawValue: Int) {\n")
-        p.indent()
         self.generateEnumInit(values: values, printer: &p)
-        p.outdent()
-        p.print("}\n")
         p.outdent()
         p.print("}\n")
     }
