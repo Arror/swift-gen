@@ -7,18 +7,6 @@
 
 import Foundation
 
-extension TMethod {
-    
-    func generateParameterStructName() -> String {
-        let mn = self.name
-        guard
-            let first = mn.uppercased().first else {
-                fatalError("Invalid method name.")
-        }
-        return String([first]).appending(String(mn.dropFirst()))
-    }
-}
-
 extension TField {
     
     func generateSwiftTypeName() -> String {
@@ -60,5 +48,28 @@ extension TType {
             reval = self.name
         }
         return reval
+    }
+}
+
+extension String {
+    
+    func firstUppercased() -> String {
+        if let first = self.uppercased().first {
+            return String([first]).appending(String(self.dropFirst()))
+        } else {
+            return self
+        } 
+    }
+}
+
+extension FileManager {
+    
+    func createDirectory(at url: URL) throws {
+                
+        if self.fileExists(atPath: url.path) {
+            try self.removeItem(at: url)
+        } else {
+            try self.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+        }
     }
 }
