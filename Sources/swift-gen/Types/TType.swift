@@ -9,16 +9,7 @@ import Foundation
 
 struct TType: Codable {
     
-    struct TKeyType: Codable {
-        
-        let name: String
-        
-        private enum CodingKeys: String, CodingKey {
-            case name = "Name"
-        }
-    }
-    
-    struct TValueType: Codable {
+    struct TSubType: Codable {
         
         let name: String
         
@@ -28,8 +19,8 @@ struct TType: Codable {
     }
     
     let name: String
-    let keyType: Optional<TKeyType>
-    let valueType: Optional<TValueType>
+    let keyType: Optional<TSubType>
+    let valueType: Optional<TSubType>
     
     private enum CodingKeys: String, CodingKey {
         case name       = "Name"
