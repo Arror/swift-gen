@@ -7,6 +7,18 @@
 
 import Foundation
 
+extension TMethod {
+    
+    func generateParameterStructName() -> String {
+        let mn = self.name
+        guard
+            let first = mn.uppercased().first else {
+                fatalError("Invalid method name.")
+        }
+        return String([first]).appending(String(mn.dropFirst()))
+    }
+}
+
 extension TField {
     
     func generateSwiftTypeName() -> String {
