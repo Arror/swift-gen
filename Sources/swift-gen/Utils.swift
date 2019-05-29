@@ -24,8 +24,9 @@ extension TType {
     func generateSwiftTypeName() -> String {
         let reval: String
         switch self.name {
-        case "map", "set", "byte", "void":
-            fatalError("Unsupport type: \(self.name).")
+        case "map", "set", "byte":
+            print("Unsupport type: \(self.name).")
+            exit(0)
         case "i16":
             reval = "Int16"
         case "i32":
@@ -41,9 +42,10 @@ extension TType {
         case "list":
             guard
                 let vt = self.valueType, !vt.name.isEmpty, vt.name != "list" else {
-                    fatalError("Unsupport type.")
+                    print("Unsupport type: \(self.name).")
+                    exit(0)
             }
-            reval = "[\(TType(name: vt.name, keyType: .none, valueType: .none).generateSwiftTypeName())]"
+            reval = "[\(TType(name: vt.name, valueType: .none).generateSwiftTypeName())]"
         default:
             reval = "RT\(self.name)"
         }

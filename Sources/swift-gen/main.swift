@@ -4,7 +4,7 @@ guard
     let json = CommandLine.arguments.dropFirst().first,
     let data = json.data(using: .utf8) else {
         print("Thrift file data parse error.")
-        exit(1)
+        exit(0)
 }
 
 do {
@@ -12,8 +12,8 @@ do {
     
     guard
         thrifts.version == "1.1" else {
-            print("Version of thrift 1.0 is required.")
-            exit(1)
+            print("Version of thrift 1.1 is required.")
+            exit(0)
     }
     
     let dirURL = URL(fileURLWithPath: thrifts.output)
@@ -28,7 +28,7 @@ do {
     guard
         let thrift = thrifts.thrifts[thrifts.input] else {
             print("Thrift file not found.")
-            exit(1)
+            exit(0)
     }
     
     var client = CodePrinter()
@@ -45,6 +45,6 @@ do {
     exit(0)
 } catch {
     print(error)
-    exit(1)
+    exit(0)
 }
 

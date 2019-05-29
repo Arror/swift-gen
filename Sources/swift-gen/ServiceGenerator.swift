@@ -33,29 +33,39 @@ class ServiceGenerator {
         p.print("public enum \(s.name) {\n")
         p.indent()
         for method in methods {
-            guard
-                let rt = method.returnType, !method.arguments.isEmpty else {
-                    fatalError("Invalid service definition.")
+            let returnType: String
+            if let rt = method.returnType {
+                returnType = rt.generateSwiftTypeName()
+            } else {
+                returnType = "RTVoid"
             }
-            p.print("\n")
-            p.print("public struct \(method.name.firstUppercased()): Codable {\n")
-            p.print("\n")
-            p.indent()
-            for field in method.arguments {
-                p.print("public let \(field.name): \(field.generateSwiftTypeName())\n")
+            if !method.arguments.isEmpty {
+                p.print("\n")
+                p.print("public struct \(method.name.firstUppercased()): Codable {\n")
+                p.indent()
+                for field in method.arguments {
+                    p.print("public let \(field.name): \(field.generateSwiftTypeName())\n")
+                }
+                p.outdent()
+                p.print("}\n")
             }
-            p.outdent()
-            p.print("}\n")
-            
             p.print("\n")
             let arguments = method.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")
-            p.print("public static func \(method.name)(\(arguments)) throws -> RTRequest<\(s.name).\(method.name.firstUppercased()), \(rt.generateSwiftTypeName())> {\n")
+            if method.arguments.isEmpty {
+                p.print("public static func \(method.name)() throws -> RTRequest<RTVoid, \(returnType)> {\n")
+            } else {
+                p.print("public static func \(method.name)(\(arguments)) throws -> RTRequest<\(s.name).\(method.name.firstUppercased()), \(returnType)> {\n")
+            }
             p.indent()
             p.print("return try RTRequest(\n")
             p.indent()
             p.print("method: \"\(s.name).\(method.name)\",\n")
-            p.print("parameter: \(s.name).\(method.name.firstUppercased())(\(method.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
-            p.print("responseType: \(rt.generateSwiftTypeName()).self\n")
+            if method.arguments.isEmpty {
+                p.print("parameter: RTVoid(),\n")
+            } else {
+                p.print("parameter: \(s.name).\(method.name.firstUppercased())(\(method.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
+            }
+            p.print("responseType: \(returnType).self\n")
             p.outdent()
             p.print(")\n")
             p.outdent()
@@ -71,11 +81,17 @@ class ServiceGenerator {
         p.print("protocol __RT\(s.name)Protocol: class {\n")
         p.indent()
         for method in methods {
-            guard
-                let rt = method.returnType, !method.arguments.isEmpty else {
-                    fatalError("Invalid service definition.")
+            let returnType: String
+            if let rt = method.returnType {
+                returnType = rt.generateSwiftTypeName()
+            } else {
+                returnType = "RTVoid"
             }
-            p.print("func \(method.name)(\(method.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")), completion: @escaping (RTResult<\(rt.generateSwiftTypeName()), RTError>) -> Void)\n")
+            if method.arguments.isEmpty {
+                p.print("func \(method.name)(withCompletion completion: @escaping (RTResult<\(returnType), RTError>) -> Void)\n")
+            } else {
+                p.print("func \(method.name)(\(method.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")), completion: @escaping (RTResult<\(returnType), RTError>) -> Void)\n")
+            }
         }
         p.outdent()
         p.print("}\n")
@@ -87,7 +103,9 @@ class ServiceGenerator {
         for method in methods {
             p.print("@objc private func __\(method.name)(parameters: Data, completion: @escaping (Data) -> Void) {\n")
             p.indent()
-            p.print("let req = \(s.name).\(method.name.firstUppercased()).__rt_from(data: parameters)\n")
+            if !method.arguments.isEmpty {
+                p.print("let req = \(s.name).\(method.name.firstUppercased()).__rt_from(data: parameters)\n")
+            }
             p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): req.\($0.name)" }).joined(separator: ", "))) { result in\n")
             p.indent()
             p.print("completion(result.__rt_toData())\n")
