@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct TType: Codable {
+struct TType: Decodable {
     
-    struct TSubType: Codable {
+    struct TValueType: Decodable {
         
         let name: String
         
@@ -19,12 +19,10 @@ struct TType: Codable {
     }
     
     let name: String
-    let keyType: Optional<TSubType>
-    let valueType: Optional<TSubType>
+    let valueType: Optional<TValueType>
     
     private enum CodingKeys: String, CodingKey {
         case name       = "Name"
-        case keyType    = "KeyType"
         case valueType  = "ValueType"
     }
 }

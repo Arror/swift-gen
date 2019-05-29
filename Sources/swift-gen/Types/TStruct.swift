@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TStruct: Codable {
+struct TStruct: Decodable {
     
     let name: String
     let fields: [TField]

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TThrift: Codable {
+struct TThrift: Decodable {
     
     let enums: [String: TEnum]
     let structs: [String: TStruct]

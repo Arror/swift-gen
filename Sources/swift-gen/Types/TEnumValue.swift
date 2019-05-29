@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TEnumValue: Codable {
+struct TEnumValue: Decodable {
     
     let name: String
     let value: Int

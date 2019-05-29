@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TThrifts: Codable {
+struct TThrifts: Decodable {
     
     let input: String
     let output: String

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TMethod: Codable {
+struct TMethod: Decodable {
     
     let name: String
     let returnType: Optional<TType>

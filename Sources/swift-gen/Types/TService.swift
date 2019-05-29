@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TService: Codable {
+struct TService: Decodable {
     
     let name: String
     let methods: [String: TMethod]

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TField: Codable {
+struct TField: Decodable {
     
     let id: Int
     let name: String
