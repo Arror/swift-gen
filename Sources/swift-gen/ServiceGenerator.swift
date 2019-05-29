@@ -29,55 +29,69 @@ class ServiceGenerator {
     
     private func generateClientService(s: TService, printer p: inout CodePrinter) {
         let methods = s.methods.map { $0.value }
-        p.print("\n")
+        
         p.print("public enum \(s.name) {\n")
         p.indent()
         for method in methods {
-            let returnType: String
-            if let rt = method.returnType {
-                returnType = rt.generateSwiftTypeName()
-            } else {
-                returnType = "RTVoid"
-            }
             if !method.arguments.isEmpty {
                 p.print("\n")
-                p.print("public struct \(method.name.firstUppercased()): Codable {\n")
-                p.indent()
-                for field in method.arguments {
-                    p.print("public let \(field.name): \(field.generateSwiftTypeName())\n")
-                }
-                p.outdent()
-                p.print("}\n")
             }
+            self.generateClientServiceParameterStruct(m: method, printer: &p)
             p.print("\n")
-            let arguments = method.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")
-            if method.arguments.isEmpty {
-                p.print("public static func \(method.name)() throws -> RTRequest<RTVoid, \(returnType)> {\n")
-            } else {
-                p.print("public static func \(method.name)(\(arguments)) throws -> RTRequest<\(s.name).\(method.name.firstUppercased()), \(returnType)> {\n")
-            }
-            p.indent()
-            p.print("return try RTRequest(\n")
-            p.indent()
-            p.print("method: \"\(s.name).\(method.name)\",\n")
-            if method.arguments.isEmpty {
-                p.print("parameter: RTVoid(),\n")
-            } else {
-                p.print("parameter: \(s.name).\(method.name.firstUppercased())(\(method.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
-            }
-            p.print("responseType: \(returnType).self\n")
-            p.outdent()
-            p.print(")\n")
-            p.outdent()
-            p.print("}\n")
+            self.generateClientServiceRequest(sn: s.name, m: method, printer: &p)
         }
         p.outdent()
         p.print("}\n")
     }
     
+    private func generateClientServiceParameterStruct(m: TMethod, printer p: inout CodePrinter) {
+        guard !m.arguments.isEmpty else { return }
+        p.print("public struct \(m.name.firstUppercased()): Codable {\n")
+        p.indent()
+        for field in m.arguments {
+            p.print("public let \(field.name): \(field.generateSwiftTypeName())\n")
+        }
+        p.outdent()
+        p.print("}\n")
+    }
+    
+    private func generateClientServiceRequest(sn: String, m: TMethod, printer p: inout CodePrinter) {
+        let returnType: String
+        if let rt = m.returnType {
+            returnType = rt.generateSwiftTypeName()
+        } else {
+            returnType = "RTVoid"
+        }
+        let arguments = m.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")
+        if m.arguments.isEmpty {
+            p.print("public static func \(m.name)() throws -> RTRequest<RTVoid, \(returnType)> {\n")
+        } else {
+            p.print("public static func \(m.name)(\(arguments)) throws -> RTRequest<\(sn).\(m.name.firstUppercased()), \(returnType)> {\n")
+        }
+        p.indent()
+        p.print("return try RTRequest(\n")
+        p.indent()
+        p.print("method: \"\(sn).\(m.name)\",\n")
+        if m.arguments.isEmpty {
+            p.print("parameter: RTVoid(),\n")
+        } else {
+            p.print("parameter: \(sn).\(m.name.firstUppercased())(\(m.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
+        }
+        p.print("responseType: \(returnType).self\n")
+        p.outdent()
+        p.print(")\n")
+        p.outdent()
+        p.print("}\n")
+    }
+    
     private func generateServerService(s: TService, printer p: inout CodePrinter) {
-        let methods = s.methods.map { $0.value }
         p.print("\n")
+        self.generateServerServiceProtocol(s: s, printer: &p)
+        self.generateServerServiceImplementation(s: s, printer: &p)
+    }
+    
+    private func generateServerServiceProtocol(s: TService, printer p: inout CodePrinter) {
+        let methods = s.methods.map { $0.value }
         p.print("protocol __RT\(s.name)Protocol: class {\n")
         p.indent()
         for method in methods {
@@ -95,7 +109,10 @@ class ServiceGenerator {
         }
         p.outdent()
         p.print("}\n")
-        
+    }
+    
+    private func generateServerServiceImplementation(s: TService, printer p: inout CodePrinter) {
+        let methods = s.methods.map { $0.value }
         p.print("\n")
         p.print("@objc(RT\(s.name))\n")
         p.print("class RT\(s.name): NSObject, __RT\(s.name)Protocol {\n")

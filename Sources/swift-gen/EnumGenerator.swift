@@ -28,11 +28,9 @@ class EnumGenerator {
         p.print("\n")
         p.print("public enum RT\(e.name): Int, Codable, CaseIterable {\n")
         p.indent()
-        p.print("\n")
         values.forEach { v in
             p.print("case \(v.name) = \(v.value)\n")
         }
-        p.print("\n")
         self.generateEnumInit(values: values, printer: &p)
         p.outdent()
         p.print("}\n")
@@ -50,8 +48,9 @@ class EnumGenerator {
         }
         p.print("default:\n")
         p.indent()
-        p.print("returne nil\n")
+        p.print("return nil\n")
         p.outdent()
+        p.print("}\n")
         p.outdent()
         p.print("}\n")
     }
