@@ -12,7 +12,7 @@ class ServiceGenerator {
     private let service: [TService]
     
     init(services: [TService]) {
-        self.service = services
+        self.service = services.sorted(by: { $0.name < $1.name })
     }
     
     func generateThriftClientServices(printer p: inout CodePrinter) {
@@ -28,8 +28,7 @@ class ServiceGenerator {
     }
     
     private func generateClientService(s: TService, printer p: inout CodePrinter) {
-        let methods = s.methods.map { $0.value }
-        
+        let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
         p.print("public enum \(s.name) {\n")
         p.indent()
         for method in methods {
@@ -91,7 +90,7 @@ class ServiceGenerator {
     }
     
     private func generateServerServiceProtocol(s: TService, printer p: inout CodePrinter) {
-        let methods = s.methods.map { $0.value }
+        let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
         p.print("protocol __RT\(s.name)Protocol: class {\n")
         p.indent()
         for method in methods {
@@ -112,7 +111,7 @@ class ServiceGenerator {
     }
     
     private func generateServerServiceImplementation(s: TService, printer p: inout CodePrinter) {
-        let methods = s.methods.map { $0.value }
+        let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
         p.print("\n")
         p.print("@objc(RT\(s.name))\n")
         p.print("class RT\(s.name): NSObject, __RT\(s.name)Protocol {\n")
@@ -121,7 +120,17 @@ class ServiceGenerator {
             p.print("@objc private func __\(method.name)(parameters: Data, completion: @escaping (Data) -> Void) {\n")
             p.indent()
             if !method.arguments.isEmpty {
-                p.print("let req = \(s.name).\(method.name.firstUppercased()).__rt_from(data: parameters)\n")
+                p.print("let req: \(s.name).\(method.name.firstUppercased())\n")
+                p.print("do {\n")
+                p.indent()
+                p.print("req = try \(s.name).\(method.name.firstUppercased()).__rt_throws_from(data: parameters)\n")
+                p.outdent()
+                p.print("} catch {\n")
+                p.indent()
+                p.print("completion(RTError(code: .encodeError, errorDescription: error.localizedDescription).__rt_toData())\n")
+                p.print("return\n")
+                p.outdent()
+                p.print("}\n")
             }
             p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): req.\($0.name)" }).joined(separator: ", "))) { result in\n")
             p.indent()

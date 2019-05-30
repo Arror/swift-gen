@@ -12,7 +12,7 @@ class EnumGenerator {
     private let enums: [TEnum]
     
     init(enums: [TEnum]) {
-        self.enums = enums
+        self.enums = enums.sorted(by: { $0.name < $1.name })
     }
     
     func generateThriftEnums(printer p: inout CodePrinter) {

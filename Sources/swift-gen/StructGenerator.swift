@@ -12,7 +12,7 @@ class StructGenerator {
     private let structs: [TStruct]
     
     init(structs: [TStruct]) {
-        self.structs = structs
+        self.structs = structs.sorted(by: { $0.name < $1.name })
     }
     
     func generateThriftStructs(printer p: inout CodePrinter) {
