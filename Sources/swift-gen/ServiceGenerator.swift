@@ -94,6 +94,7 @@ class ServiceGenerator {
         p.print("protocol __RT\(s.name)Protocol: class {\n")
         p.indent()
         for method in methods {
+            p.print("\n")
             let returnType: String
             if let rt = method.returnType {
                 returnType = rt.generateSwiftTypeName()
@@ -117,6 +118,7 @@ class ServiceGenerator {
         p.print("class RT\(s.name): NSObject, __RT\(s.name)Protocol {\n")
         p.indent()
         for method in methods {
+            p.print("\n")
             p.print("@objc private func __\(method.name)(parameters: Data, completion: @escaping (Data) -> Void) {\n")
             p.indent()
             if !method.arguments.isEmpty {

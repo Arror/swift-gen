@@ -22,8 +22,8 @@ do {
     
     let name = URL(fileURLWithPath: thrifts.input).deletingPathExtension().lastPathComponent.firstUppercased()
     
-    let clientFileURL = dirURL.appendingPathComponent("\(name).client.swift")
-    let serverFileURL = dirURL.appendingPathComponent("\(name).server.swift")
+    let clientFileURL = dirURL.appendingPathComponent("\(name).c.swift")
+    let serverFileURL = dirURL.appendingPathComponent("\(name).s.swift")
     
     guard
         let thrift = thrifts.thrifts[thrifts.input] else {
