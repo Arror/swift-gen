@@ -119,13 +119,13 @@ class ServiceGenerator {
         p.indent()
         for method in methods {
             p.print("\n")
-            p.print("@objc private func __\(method.name)(parameters: Data, completion: @escaping (Data) -> Void) {\n")
+            p.print("@objc private func __\(method.name)(parameter: Data, completion: @escaping (Data) -> Void) {\n")
             p.indent()
             if !method.arguments.isEmpty {
                 p.print("let req: \(s.name).\(method.name.firstUppercased())\n")
                 p.print("do {\n")
                 p.indent()
-                p.print("req = try \(s.name).\(method.name.firstUppercased()).__rt_throws_from(data: parameters)\n")
+                p.print("req = try \(s.name).\(method.name.firstUppercased()).__rt_throws_from(data: parameter)\n")
                 p.outdent()
                 p.print("} catch {\n")
                 p.indent()
