@@ -7,21 +7,36 @@
 
 import Foundation
 
+enum Scope {
+    
+    case client
+    case server
+    
+    var prefix: String {
+        switch self {
+        case .client:
+            return "RT"
+        case .server:
+            return "RTServer"
+        }
+    }
+}
+
 extension TField {
     
-    func generateSwiftTypeName() -> String {
+    func generateSwiftTypeName(scope: Scope) -> String {
         guard
             let type = self.type else {
                 fatalError("Invlaid field type.")
         }
-        return "\(type.generateSwiftTypeName())\(self.isOptional ? "?" : "")"
+        return "\(type.generateSwiftTypeName(scope: scope))\(self.isOptional ? "?" : "")"
     }
 }
 
 
 extension TType {
     
-    func generateSwiftTypeName() -> String {
+    func generateSwiftTypeName(scope: Scope) -> String {
         let reval: String
         switch self.name {
         case "map", "set", "byte":
@@ -45,9 +60,9 @@ extension TType {
                     print("Unsupport type: \(self.name).")
                     exit(0)
             }
-            reval = "[\(TType(name: vt.name, valueType: .none).generateSwiftTypeName())]"
+            reval = "[\(TType(name: vt.name, valueType: .none).generateSwiftTypeName(scope: scope))]"
         default:
-            reval = "RT\(self.name)"
+            reval = "\(scope.prefix)\(self.name)"
         }
         return reval
     }

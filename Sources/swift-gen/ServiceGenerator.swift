@@ -15,13 +15,22 @@ class ServiceGenerator {
         self.service = services.sorted(by: { $0.name < $1.name })
     }
     
-    func generateThriftClientServices(printer p: inout CodePrinter) {
+    func generateThriftService(scope: Scope, printer p: inout CodePrinter) {
+        switch scope {
+        case .client:
+            self.generateThriftClientServices(printer: &p)
+        case .server:
+            self.generateThriftServerServices(printer: &p)
+        }
+    }
+    
+    private func generateThriftClientServices(printer p: inout CodePrinter) {
         for s in self.service {
             self.generateClientService(s: s, printer: &p)
         }
     }
     
-    func generateThriftServerServices(printer p: inout CodePrinter) {
+    private func generateThriftServerServices(printer p: inout CodePrinter) {
         for s in self.service {
             self.generateServerService(s: s, printer: &p)
         }
@@ -39,12 +48,12 @@ class ServiceGenerator {
         p.print("}\n")
     }
     
-    private func generateParameterStruct(m: TMethod, printer p: inout CodePrinter) {
+    private func generateParameterStruct(scope: Scope, m: TMethod, printer p: inout CodePrinter) {
         guard !m.arguments.isEmpty else { return }
         p.print("struct Parameter: Codable {\n")
         p.indent()
         for field in m.arguments {
-            p.print("let \(field.name): \(field.generateSwiftTypeName())\n")
+            p.print("let \(field.name): \(field.generateSwiftTypeName(scope: scope))\n")
         }
         p.outdent()
         p.print("}\n")
@@ -53,17 +62,17 @@ class ServiceGenerator {
     private func generateClientServiceRequest(sn: String, m: TMethod, printer p: inout CodePrinter) {
         let returnType: String
         if let rt = m.returnType {
-            returnType = rt.generateSwiftTypeName()
+            returnType = rt.generateSwiftTypeName(scope: .client)
         } else {
             returnType = "RTVoid"
         }
-        let arguments = m.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")
+        let arguments = m.arguments.map({ "\($0.name): \($0.generateSwiftTypeName(scope: .client))" }).joined(separator: ", ")
         if m.arguments.isEmpty {
             p.print("public static func \(m.name)() throws -> RTRequest<\(returnType)> {\n")
         } else {
             p.print("public static func \(m.name)(\(arguments)) throws -> RTRequest<\(returnType)> {\n")
             p.indent()
-            self.generateParameterStruct(m: m, printer: &p)
+            self.generateParameterStruct(scope: .client, m: m, printer: &p)
             p.outdent()
         }
         p.indent()
@@ -95,14 +104,14 @@ class ServiceGenerator {
             p.print("\n")
             let returnType: String
             if let rt = method.returnType {
-                returnType = rt.generateSwiftTypeName()
+                returnType = rt.generateSwiftTypeName(scope: .server)
             } else {
                 returnType = "RTVoid"
             }
             if method.arguments.isEmpty {
                 p.print("func \(method.name)(withCompletion completion: @escaping (RTResult<\(returnType), RTError>) -> Void)\n")
             } else {
-                p.print("func \(method.name)(\(method.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")), completion: @escaping (RTResult<\(returnType), RTError>) -> Void)\n")
+                p.print("func \(method.name)(\(method.arguments.map({ "\($0.name): \($0.generateSwiftTypeName(scope: .server))" }).joined(separator: ", ")), completion: @escaping (RTResult<\(returnType), RTError>) -> Void)\n")
             }
         }
         p.outdent()
@@ -120,7 +129,7 @@ class ServiceGenerator {
             p.print("@objc private func __\(method.name)(parameter: Data, completion: @escaping (Data) -> Void) {\n")
             p.indent()
             if !method.arguments.isEmpty {
-                self.generateParameterStruct(m: method, printer: &p)
+                self.generateParameterStruct(scope: .server, m: method, printer: &p)
                 p.print("let p: Parameter\n")
                 p.print("do {\n")
                 p.indent()

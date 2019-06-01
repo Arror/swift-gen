@@ -15,17 +15,17 @@ class EnumGenerator {
         self.enums = enums.sorted(by: { $0.name < $1.name })
     }
     
-    func generateThriftEnums(printer p: inout CodePrinter) {
+    func generateThriftEnums(scope: Scope, printer p: inout CodePrinter) {
         for e in self.enums {
-            self.generateEnum(e: e, printer: &p)
+            self.generateEnum(scope: scope, e: e, printer: &p)
         }
     }
     
-    private func generateEnum(e: TEnum, printer p: inout CodePrinter) {
+    private func generateEnum(scope: Scope, e: TEnum, printer p: inout CodePrinter) {
         let values = e.values.values.sorted { lhs, rhs in
             return lhs.value < rhs.value
         }
-        p.print("public enum RT\(e.name): Int, Codable, CaseIterable {\n")
+        p.print("public enum \(scope.prefix)\(e.name): Int, Codable, CaseIterable {\n")
         p.indent()
         values.forEach { v in
             p.print("case \(v.name) = \(v.value)\n")

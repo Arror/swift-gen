@@ -15,26 +15,28 @@ class StructGenerator {
         self.structs = structs.sorted(by: { $0.name < $1.name })
     }
     
-    func generateThriftStructs(printer p: inout CodePrinter) {
+    func generateThriftStructs(scope: Scope, printer p: inout CodePrinter) {
         for s in self.structs {
-            self.generateStruct(s: s, printer: &p)
+            self.generateStruct(scope: scope, s: s, printer: &p)
         }
     }
     
-    private func generateStruct(s: TStruct, printer p: inout CodePrinter) {
-        p.print("public struct RT\(s.name): Codable {\n")
+    private func generateStruct(scope: Scope,  s: TStruct, printer p: inout CodePrinter) {
+        let accessControl: String = (scope == .client) ? "public " : ""
+        p.print("\(accessControl)struct \(scope.prefix)\(s.name): Codable {\n")
         p.indent()
         s.fields.forEach { field in
-            p.print("public let \(field.name): \(field.generateSwiftTypeName())\n")
+            p.print("\(accessControl)let \(field.name): \(field.generateSwiftTypeName(scope: scope))\n")
         }
-        self.generateStructInit(values: s.fields, printer: &p)
+        self.generateStructInit(scope: scope, values: s.fields, printer: &p)
         p.outdent()
         p.print("}\n")
         p.print("\n")
     }
     
-    private func generateStructInit(values: [TField], printer p: inout CodePrinter) {
-        p.print("public init(\(values.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", "))) {\n")
+    private func generateStructInit(scope: Scope, values: [TField], printer p: inout CodePrinter) {
+        let accessControl: String = (scope == .client) ? "public " : ""
+        p.print("\(accessControl)init(\(values.map({ "\($0.name): \($0.generateSwiftTypeName(scope: scope))" }).joined(separator: ", "))) {\n")
         p.indent()
         values.forEach { v in
             p.print("self.\(v.name) = \(v.name)\n")
