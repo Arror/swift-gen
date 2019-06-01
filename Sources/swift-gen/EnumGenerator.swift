@@ -25,21 +25,22 @@ class EnumGenerator {
         let values = e.values.values.sorted { lhs, rhs in
             return lhs.value < rhs.value
         }
-        let accessControl: String = (scope == .client) ? "public " : ""
-        p.print("\(accessControl)enum \(scope.prefix)\(e.name): Int, Codable, CaseIterable {\n")
+        let control: String = (scope == .client) ? "public " : ""
+        p.print("\(control)enum \(scope.prefix)\(e.name): Int, Codable, CaseIterable {\n")
         p.indent()
         values.forEach { v in
             p.print("case \(v.name) = \(v.value)\n")
         }
-        self.generateEnumInit(scope: scope, values: values, printer: &p)
+        if scope == .client {
+            self.generateEnumInit(values: values, printer: &p)
+        }
         p.outdent()
         p.print("}\n")
         p.print("\n")
     }
     
-    private func generateEnumInit(scope: Scope, values: [TEnumValue], printer p: inout CodePrinter) {
-        let accessControl: String = (scope == .client) ? "public " : ""
-        p.print("\(accessControl)init?(rawValue: Int) {\n")
+    private func generateEnumInit(values: [TEnumValue], printer p: inout CodePrinter) {
+        p.print("public init?(rawValue: Int) {\n")
         p.indent()
         p.print("switch rawValue {\n")
         values.forEach { v in
