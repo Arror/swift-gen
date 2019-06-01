@@ -7,14 +7,22 @@ guard
         exit(0)
 }
 
+enum Global {
+    static var clientNamespace: String = ""
+    static var serverNamespace: String = ""
+}
+
 do {
     let thrifts = try JSONDecoder().decode(TThrifts.self, from: data)
     
     guard
-        thrifts.version == "1.1" else {
-            print("Version of thrift 1.1 is required.")
+        thrifts.version == "2.0" else {
+            print("Version of thrift 2.0 is required.")
             exit(0)
     }
+    
+    Global.clientNamespace = thrifts.clientNamespcae
+    Global.serverNamespace = thrifts.serverNamespace
     
     let dirURL = URL(fileURLWithPath: thrifts.output)
     

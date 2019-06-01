@@ -15,9 +15,9 @@ enum Scope {
     var prefix: String {
         switch self {
         case .client:
-            return "RT"
+            return Global.clientNamespace
         case .server:
-            return "RTServer"
+            return Global.serverNamespace
         }
     }
 }

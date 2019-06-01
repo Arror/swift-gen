@@ -13,11 +13,15 @@ struct TThrifts: Decodable {
     let output: String
     let thrifts: [String: TThrift]
     let version: String
+    let clientNamespcae: String
+    let serverNamespace: String
     
     private enum CodingKeys: String, CodingKey {
         case input      = "IP"
         case output     = "OP"
         case thrifts    = "TS"
         case version    = "TV"
+        case clientNamespcae = "CNS"
+        case serverNamespace = "SNS"
     }
 }
