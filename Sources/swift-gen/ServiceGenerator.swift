@@ -83,7 +83,6 @@ class ServiceGenerator {
     }
     
     private func generateServerService(s: TService, printer p: inout CodePrinter) {
-        p.print("\n")
         self.generateServerServiceProtocol(s: s, printer: &p)
         self.generateServerServiceImplementation(s: s, printer: &p)
     }
@@ -108,11 +107,11 @@ class ServiceGenerator {
         }
         p.outdent()
         p.print("}\n")
+        p.print("\n")
     }
     
     private func generateServerServiceImplementation(s: TService, printer p: inout CodePrinter) {
         let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
-        p.print("\n")
         p.print("@objc(RT\(s.name))\n")
         p.print("class RT\(s.name): NSObject, __RT\(s.name)Protocol {\n")
         p.indent()

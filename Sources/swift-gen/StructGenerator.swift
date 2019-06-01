@@ -22,7 +22,6 @@ class StructGenerator {
     }
     
     private func generateStruct(s: TStruct, printer p: inout CodePrinter) {
-        p.print("\n")
         p.print("public struct RT\(s.name): Codable {\n")
         p.indent()
         s.fields.forEach { field in
@@ -31,6 +30,7 @@ class StructGenerator {
         self.generateStructInit(values: s.fields, printer: &p)
         p.outdent()
         p.print("}\n")
+        p.print("\n")
     }
     
     private func generateStructInit(values: [TField], printer p: inout CodePrinter) {

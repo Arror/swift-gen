@@ -25,7 +25,6 @@ class EnumGenerator {
         let values = e.values.values.sorted { lhs, rhs in
             return lhs.value < rhs.value
         }
-        p.print("\n")
         p.print("public enum RT\(e.name): Int, Codable, CaseIterable {\n")
         p.indent()
         values.forEach { v in
@@ -34,6 +33,7 @@ class EnumGenerator {
         self.generateEnumInit(values: values, printer: &p)
         p.outdent()
         p.print("}\n")
+        p.print("\n")
     }
     
     private func generateEnumInit(values: [TEnumValue], printer p: inout CodePrinter) {
