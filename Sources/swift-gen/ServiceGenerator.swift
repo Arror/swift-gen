@@ -32,10 +32,6 @@ class ServiceGenerator {
         p.print("public enum \(s.name) {\n")
         p.indent()
         for method in methods {
-            if !method.arguments.isEmpty {
-                p.print("\n")
-            }
-            self.generateClientServiceParameterStruct(m: method, printer: &p)
             p.print("\n")
             self.generateClientServiceRequest(sn: s.name, m: method, printer: &p)
         }
@@ -43,12 +39,12 @@ class ServiceGenerator {
         p.print("}\n")
     }
     
-    private func generateClientServiceParameterStruct(m: TMethod, printer p: inout CodePrinter) {
+    private func generateParameterStruct(m: TMethod, printer p: inout CodePrinter) {
         guard !m.arguments.isEmpty else { return }
-        p.print("public struct \(m.name.firstUppercased()): Codable {\n")
+        p.print("struct Parameter: Codable {\n")
         p.indent()
         for field in m.arguments {
-            p.print("public let \(field.name): \(field.generateSwiftTypeName())\n")
+            p.print("let \(field.name): \(field.generateSwiftTypeName())\n")
         }
         p.outdent()
         p.print("}\n")
@@ -63,9 +59,12 @@ class ServiceGenerator {
         }
         let arguments = m.arguments.map({ "\($0.name): \($0.generateSwiftTypeName())" }).joined(separator: ", ")
         if m.arguments.isEmpty {
-            p.print("public static func \(m.name)() throws -> RTRequest<RTVoid, \(returnType)> {\n")
+            p.print("public static func \(m.name)() throws -> RTRequest<\(returnType)> {\n")
         } else {
-            p.print("public static func \(m.name)(\(arguments)) throws -> RTRequest<\(sn).\(m.name.firstUppercased()), \(returnType)> {\n")
+            p.print("public static func \(m.name)(\(arguments)) throws -> RTRequest<\(returnType)> {\n")
+            p.indent()
+            self.generateParameterStruct(m: m, printer: &p)
+            p.outdent()
         }
         p.indent()
         p.print("return try RTRequest(\n")
@@ -74,7 +73,7 @@ class ServiceGenerator {
         if m.arguments.isEmpty {
             p.print("parameter: RTVoid(),\n")
         } else {
-            p.print("parameter: \(sn).\(m.name.firstUppercased())(\(m.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
+            p.print("parameter: Parameter(\(m.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
         }
         p.print("responseType: \(returnType).self\n")
         p.outdent()
@@ -122,21 +121,22 @@ class ServiceGenerator {
             p.print("@objc private func __\(method.name)(parameter: Data, completion: @escaping (Data) -> Void) {\n")
             p.indent()
             if !method.arguments.isEmpty {
-                p.print("let req: \(s.name).\(method.name.firstUppercased())\n")
+                self.generateParameterStruct(m: method, printer: &p)
+                p.print("let p: Parameter\n")
                 p.print("do {\n")
                 p.indent()
-                p.print("req = try \(s.name).\(method.name.firstUppercased()).__rt_throws_from(data: parameter)\n")
+                p.print("p = try JSONDecoder().decode(Parameter.self, from: parameter)\n")
                 p.outdent()
                 p.print("} catch {\n")
                 p.indent()
-                p.print("completion(RTError(code: .encodeError, errorDescription: error.localizedDescription).__rt_toData())\n")
+                p.print("completion(RTError(code: .encodeError, errorDescription: error.localizedDescription).data)\n")
                 p.print("return\n")
                 p.outdent()
                 p.print("}\n")
             }
-            p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): req.\($0.name)" }).joined(separator: ", "))) { result in\n")
+            p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): p.\($0.name)" }).joined(separator: ", "))) { result in\n")
             p.indent()
-            p.print("completion(result.__rt_toData())\n")
+            p.print("completion(result.data)\n")
             p.outdent()
             p.print("}\n")
             p.outdent()
