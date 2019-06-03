@@ -1,24 +1,31 @@
 import Foundation
 
-guard
-    let json = CommandLine.arguments.dropFirst().first,
-    let data = json.data(using: .utf8) else {
-        print("Thrift file data parse error.")
-        exit(0)
+enum Global {
+    static fileprivate(set) var clientNamespace: String = ""
+    static fileprivate(set) var serverNamespace: String = ""
 }
 
-enum Global {
-    static var clientNamespace: String = ""
-    static var serverNamespace: String = ""
+struct GeneratorError: LocalizedError {
+    
+    let errorDescription: String?
+    
+    init(_ errorDescription: String) {
+        self.errorDescription = errorDescription
+    }
 }
 
 do {
+    guard
+        let json = CommandLine.arguments.dropFirst().first,
+        let data = json.data(using: .utf8) else {
+            throw GeneratorError("Thrift file parse error.")
+    }
+    
     let thrifts = try JSONDecoder().decode(TThrifts.self, from: data)
     
     guard
         thrifts.version == "2.0" else {
-            print("Version of thrift 2.0 is required.")
-            exit(0)
+            throw GeneratorError("Version of thrift 2.0 is required.")
     }
     
     Global.clientNamespace = thrifts.clientNamespcae
@@ -35,8 +42,7 @@ do {
     
     guard
         let thrift = thrifts.thrifts[thrifts.input] else {
-            print("Thrift file not found.")
-            exit(0)
+            throw GeneratorError("Thrift file not found.")
     }
     
     var client = CodePrinter()

@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct TStruct: Decodable {
+public struct TStruct: Decodable {
     
-    let name: String
-    let fields: [TField]
+    public let name: String
+    public let fields: [TField]
     
     private enum CodingKeys: String, CodingKey {
         case name   = "Name"

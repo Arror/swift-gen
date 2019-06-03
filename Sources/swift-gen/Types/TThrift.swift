@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct TThrift: Decodable {
+public struct TThrift: Decodable {
     
-    let enums: [String: TEnum]
-    let structs: [String: TStruct]
-    let services: [String: TService]
+    public let enums: [String: TEnum]
+    public let structs: [String: TStruct]
+    public let services: [String: TService]
     
     private enum CodingKeys: String, CodingKey {
         case enums      = "Enums"

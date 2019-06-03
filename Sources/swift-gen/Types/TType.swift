@@ -7,19 +7,19 @@
 
 import Foundation
 
-struct TType: Decodable {
+public struct TType: Decodable {
     
-    struct TValueType: Decodable {
+    public struct TValueType: Decodable {
         
-        let name: String
+        public let name: String
         
         private enum CodingKeys: String, CodingKey {
             case name = "Name"
         }
     }
     
-    let name: String
-    let valueType: Optional<TValueType>
+    public let name: String
+    public let valueType: Optional<TValueType>
     
     private enum CodingKeys: String, CodingKey {
         case name       = "Name"

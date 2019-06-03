@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct TThrifts: Decodable {
+public struct TThrifts: Decodable {
     
-    let input: String
-    let output: String
-    let thrifts: [String: TThrift]
-    let version: String
-    let clientNamespcae: String
-    let serverNamespace: String
+    public let input: String
+    public let output: String
+    public let thrifts: [String: TThrift]
+    public let version: String
+    public let clientNamespcae: String
+    public let serverNamespace: String
     
     private enum CodingKeys: String, CodingKey {
         case input      = "IP"

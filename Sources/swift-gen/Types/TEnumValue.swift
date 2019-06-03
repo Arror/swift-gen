@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct TEnumValue: Decodable {
+public struct TEnumValue: Decodable {
     
-    let name: String
-    let value: Int
+    public let name: String
+    public let value: Int
     
     private enum CodingKeys: String, CodingKey {
         case name   = "Name"

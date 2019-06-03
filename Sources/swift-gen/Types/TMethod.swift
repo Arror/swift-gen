@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct TMethod: Decodable {
+public struct TMethod: Decodable {
     
-    let name: String
-    let returnType: Optional<TType>
-    let arguments: [TField]
+    public let name: String
+    public let returnType: Optional<TType>
+    public let arguments: [TField]
     
     private enum CodingKeys: String, CodingKey {
         case name       = "Name"

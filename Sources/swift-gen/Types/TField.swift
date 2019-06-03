@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct TField: Decodable {
+public struct TField: Decodable {
     
-    let id: Int
-    let name: String
-    let isOptional: Bool
-    let type: Optional<TType>
+    public let id: Int
+    public let name: String
+    public let isOptional: Bool
+    public let type: Optional<TType>
     
     private enum CodingKeys: String, CodingKey {
         case id         = "ID"
