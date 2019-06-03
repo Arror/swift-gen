@@ -12,7 +12,7 @@ public enum FileType {
     case client
     case server
     
-    var prefix: String {
+    public var prefix: String {
         switch self {
         case .client:
             return Global.clientNamespace
@@ -24,24 +24,28 @@ public enum FileType {
 
 extension TField {
     
-    public func generateSwiftTypeName(type: FileType) -> String {
+    public func generateSwiftTypeName(type: FileType) throws -> String {
         guard
             let t = self.type else {
-                fatalError("Invlaid field type.")
+                throw GeneratorError("Invlaid type of field: \(self.name)")
         }
-        return "\(t.generateSwiftTypeName(type: type))\(self.isOptional ? "?" : "")"
+        return "\(try t.generateSwiftTypeName(type: type))\(self.isOptional ? "?" : "")"
     }
 }
 
 
 extension TType {
     
-    public func generateSwiftTypeName(type: FileType) -> String {
+    private static let unsupportedThriftTypes: Set<String> = ["map", "set", "byte"]
+    private static let unsupportedThriftElementTypes: Set<String> = ["map", "set", "byte", "list"]
+    
+    public func generateSwiftTypeName(type: FileType) throws -> String {
+        guard
+            TType.unsupportedThriftTypes.contains(self.name) else {
+                throw GeneratorError("Unsupport type: \(self.name).")
+        }
         let reval: String
         switch self.name {
-        case "map", "set", "byte":
-            print("Unsupport type: \(self.name).")
-            exit(0)
         case "i16":
             reval = "Int16"
         case "i32":
@@ -56,11 +60,10 @@ extension TType {
             reval = "String"
         case "list":
             guard
-                let vt = self.valueType, !vt.name.isEmpty, vt.name != "list" else {
-                    print("Unsupport type: \(self.name).")
-                    exit(0)
+                let valueType = self.valueType, TType.unsupportedThriftElementTypes.contains(valueType.name) else {
+                    throw GeneratorError("Unsupport element type: \(self.name).")
             }
-            reval = "[\(TType(name: vt.name, valueType: .none).generateSwiftTypeName(type: type))]"
+            reval = "[\(try TType(name: valueType.name, valueType: .none).generateSwiftTypeName(type: type))]"
         default:
             reval = "\(type.prefix)\(self.name)"
         }
@@ -71,11 +74,11 @@ extension TType {
 extension String {
     
     public func firstUppercased() -> String {
-        if let first = self.uppercased().first {
-            return String([first]).appending(String(self.dropFirst()))
-        } else {
-            return self
-        } 
+        guard
+            let first = self.uppercased().first else {
+                return self
+        }
+        return String([first]).appending(String(self.dropFirst()))
     }
 }
 

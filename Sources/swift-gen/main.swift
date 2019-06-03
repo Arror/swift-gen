@@ -50,8 +50,8 @@ do {
     
     let generator = FileGenerator(thrift: thrift)
     
-    generator.generateFile(type: .client, printer: &client)
-    generator.generateFile(type: .server, printer: &server)
+    try generator.generateFile(type: .client, printer: &client)
+    try generator.generateFile(type: .server, printer: &server)
     
     try client.content.write(to: clientFileURL, atomically: true, encoding: .utf8)
     try server.content.write(to: serverFileURL, atomically: true, encoding: .utf8)
