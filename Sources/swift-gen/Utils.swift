@@ -52,7 +52,7 @@ extension TType {
     
     public func generateSwiftTypeName(type: FileType) throws -> String {
         guard
-            TType.unsupportedThriftTypes.contains(self.name) else {
+            !TType.unsupportedThriftTypes.contains(self.name) else {
                 throw GeneratorError("Unsupport type: \(self.name).")
         }
         let reval: String

@@ -58,7 +58,7 @@ do {
     
     exit(0)
 } catch {
-    print(error)
+    print(error.localizedDescription)
     exit(0)
 }
 

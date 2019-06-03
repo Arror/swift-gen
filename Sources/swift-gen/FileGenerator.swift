@@ -21,9 +21,9 @@ public final class FileGenerator {
     
     public func generateFile(type: FileType, printer p: inout CodePrinter) throws {
         self.generateFileHeader(printer: &p)
-        self.enumGenerator.generateThriftEnums(type: .client, printer: &p)
-        try self.structGenerator.generateThriftStructs(type: .client, printer: &p)
-        try self.serviceGenerator.generateThriftService(type: .client, printer: &p)
+        self.enumGenerator.generateThriftEnums(type: type, printer: &p)
+        try self.structGenerator.generateThriftStructs(type: type, printer: &p)
+        try self.serviceGenerator.generateThriftService(type: type, printer: &p)
     }
     
     private func generateFileHeader(printer p: inout CodePrinter) {
