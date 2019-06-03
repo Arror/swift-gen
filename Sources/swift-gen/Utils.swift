@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum FileType {
+public enum FileType {
     
     case client
     case server
@@ -24,7 +24,7 @@ enum FileType {
 
 extension TField {
     
-    func generateSwiftTypeName(type: FileType) -> String {
+    public func generateSwiftTypeName(type: FileType) -> String {
         guard
             let t = self.type else {
                 fatalError("Invlaid field type.")
@@ -36,7 +36,7 @@ extension TField {
 
 extension TType {
     
-    func generateSwiftTypeName(type: FileType) -> String {
+    public func generateSwiftTypeName(type: FileType) -> String {
         let reval: String
         switch self.name {
         case "map", "set", "byte":
@@ -70,7 +70,7 @@ extension TType {
 
 extension String {
     
-    func firstUppercased() -> String {
+    public func firstUppercased() -> String {
         if let first = self.uppercased().first {
             return String([first]).appending(String(self.dropFirst()))
         } else {
@@ -81,7 +81,7 @@ extension String {
 
 extension FileManager {
     
-    func createDirectory(at url: URL) throws {
+    public func createDirectory(at url: URL) throws {
         var isDirectory: ObjCBool = false
         if self.fileExists(atPath: url.path, isDirectory: &isDirectory) {
             if !isDirectory.boolValue {

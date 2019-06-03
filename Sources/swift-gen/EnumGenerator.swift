@@ -7,15 +7,15 @@
 
 import Foundation
 
-final class EnumGenerator {
+public final class EnumGenerator {
     
     private let enums: [TEnum]
     
-    init(enums: [TEnum]) {
+    public init(enums: [TEnum]) {
         self.enums = enums.sorted(by: { $0.name < $1.name })
     }
     
-    func generateThriftEnums(type: FileType, printer p: inout CodePrinter) {
+    public func generateThriftEnums(type: FileType, printer p: inout CodePrinter) {
         for e in self.enums {
             self.generateEnum(type: type, enum: e, printer: &p)
         }

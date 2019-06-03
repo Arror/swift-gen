@@ -7,19 +7,19 @@
 
 import Foundation
 
-final class FileGenerator {
+public final class FileGenerator {
     
     private let enumGenerator: EnumGenerator
     private let structGenerator: StructGenerator
     private let serviceGenerator: ServiceGenerator
     
-    init(thrift: TThrift) {
+    public init(thrift: TThrift) {
         self.enumGenerator = EnumGenerator(enums: thrift.enums.map { $0.value })
         self.structGenerator = StructGenerator(structs: thrift.structs.map { $0.value })
         self.serviceGenerator = ServiceGenerator(services: thrift.services.map { $0.value })
     }
     
-    func generateFile(type: FileType, printer p: inout CodePrinter) {
+    public func generateFile(type: FileType, printer p: inout CodePrinter) {
         self.generateFileHeader(printer: &p)
         self.enumGenerator.generateThriftEnums(type: .client, printer: &p)
         self.structGenerator.generateThriftStructs(type: .client, printer: &p)

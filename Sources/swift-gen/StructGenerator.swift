@@ -7,15 +7,15 @@
 
 import Foundation
 
-final class StructGenerator {
+public final class StructGenerator {
     
     private let structs: [TStruct]
     
-    init(structs: [TStruct]) {
+    public init(structs: [TStruct]) {
         self.structs = structs.sorted(by: { $0.name < $1.name })
     }
     
-    func generateThriftStructs(type: FileType, printer p: inout CodePrinter) {
+    public func generateThriftStructs(type: FileType, printer p: inout CodePrinter) {
         for s in self.structs {
             self.generateStruct(type: type, struct: s, printer: &p)
         }

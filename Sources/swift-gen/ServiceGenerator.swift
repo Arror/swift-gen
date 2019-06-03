@@ -7,15 +7,15 @@
 
 import Foundation
 
-final class ServiceGenerator {
+public final class ServiceGenerator {
     
     private let service: [TService]
     
-    init(services: [TService]) {
+    public init(services: [TService]) {
         self.service = services.sorted(by: { $0.name < $1.name })
     }
     
-    func generateThriftService(type: FileType, printer p: inout CodePrinter) {
+    public func generateThriftService(type: FileType, printer p: inout CodePrinter) {
         switch type {
         case .client:
             self.generateThriftClientServices(printer: &p)
