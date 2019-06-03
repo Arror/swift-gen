@@ -22,14 +22,25 @@ public enum FileType {
     }
 }
 
+extension TMethod {
+    
+    public func generateSwiftTypeName(type: FileType) throws -> String {
+        if let t = self.returnType {
+            return try t.generateSwiftTypeName(type: type)
+        } else {
+            return "RTVoid"
+        }
+    }
+}
+
 extension TField {
     
     public func generateSwiftTypeName(type: FileType) throws -> String {
-        guard
-            let t = self.type else {
-                throw GeneratorError("Invlaid type of field: \(self.name)")
+        if let t = self.type {
+            return "\(try t.generateSwiftTypeName(type: type))\(self.isOptional ? "?" : "")"
+        } else {
+            throw GeneratorError("Invlaid filed type, filed name: \(self.name)")
         }
-        return "\(try t.generateSwiftTypeName(type: type))\(self.isOptional ? "?" : "")"
     }
 }
 

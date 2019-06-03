@@ -9,46 +9,25 @@ import Foundation
 
 public final class ServiceGenerator {
     
-    private let service: [TService]
+    private let services: [TService]
     
     public init(services: [TService]) {
-        self.service = services.sorted(by: { $0.name < $1.name })
+        self.services = services.sorted(by: { $0.name < $1.name })
     }
     
     public func generateThriftService(type: FileType, printer p: inout CodePrinter) throws {
-        switch type {
-        case .client:
-            try self.generateThriftClientServices(printer: &p)
-        case .server:
-            try self.generateThriftServerServices(printer: &p)
+        for s in self.services {
+            switch type {
+            case .client:
+                try self.generateClientService(service: s, printer: &p)
+            case .server:
+                try self.generateServerServiceProtocol(service: s, printer: &p)
+                try self.generateServerServiceImplementation(service: s, printer: &p)
+            }
         }
     }
     
-    private func generateThriftClientServices(printer p: inout CodePrinter) throws{
-        for s in self.service {
-            try self.generateClientService(s: s, printer: &p)
-        }
-    }
-    
-    private func generateThriftServerServices(printer p: inout CodePrinter) throws {
-        for s in self.service {
-            try self.generateServerService(s: s, printer: &p)
-        }
-    }
-    
-    private func generateClientService(s: TService, printer p: inout CodePrinter) throws {
-        let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
-        p.print("public enum \(s.name) {\n")
-        p.indent()
-        for method in methods {
-            p.print("\n")
-            try self.generateClientServiceRequest(sn: s.name, m: method, printer: &p)
-        }
-        p.outdent()
-        p.print("}\n")
-    }
-    
-    private func generateParameterStruct(type: FileType, m: TMethod, printer p: inout CodePrinter) throws {
+    private func generateParameterStruct(type: FileType, method m: TMethod, printer p: inout CodePrinter) throws {
         guard !m.arguments.isEmpty else { return }
         p.print("struct Parameter: Codable {\n")
         p.indent()
@@ -59,55 +38,48 @@ public final class ServiceGenerator {
         p.print("}\n")
     }
     
-    private func generateClientServiceRequest(sn: String, m: TMethod, printer p: inout CodePrinter) throws {
-        let returnType: String
-        if let rt = m.returnType {
-            returnType = try rt.generateSwiftTypeName(type: .client)
-        } else {
-            returnType = "RTVoid"
-        }
-        let arguments = try m.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .client))" }).joined(separator: ", ")
-        if m.arguments.isEmpty {
-            p.print("public static func \(m.name)() throws -> RTRequest<\(returnType)> {\n")
-        } else {
-            p.print("public static func \(m.name)(\(arguments)) throws -> RTRequest<\(returnType)> {\n")
+    private func generateClientService(service s: TService, printer p: inout CodePrinter) throws {
+        let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
+        p.print("public enum \(s.name) {\n")
+        p.indent()
+        for method in methods {
+            p.print("\n")
+            let returnType = try method.generateSwiftTypeName(type: .client)
+            let arguments = try method.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .client))" }).joined(separator: ", ")
+            if method.arguments.isEmpty {
+                p.print("public static func \(method.name)() throws -> RTRequest<\(returnType)> {\n")
+            } else {
+                p.print("public static func \(method.name)(\(arguments)) throws -> RTRequest<\(returnType)> {\n")
+                p.indent()
+                try self.generateParameterStruct(type: .client, method: method, printer: &p)
+                p.outdent()
+            }
             p.indent()
-            try self.generateParameterStruct(type: .client, m: m, printer: &p)
+            p.print("return try RTRequest(\n")
+            p.indent()
+            p.print("method: \"\(s.name).\(method.name)\",\n")
+            if method.arguments.isEmpty {
+                p.print("parameter: RTVoid(),\n")
+            } else {
+                p.print("parameter: Parameter(\(method.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
+            }
+            p.print("responseType: \(returnType).self\n")
             p.outdent()
+            p.print(")\n")
+            p.outdent()
+            p.print("}\n")
         }
-        p.indent()
-        p.print("return try RTRequest(\n")
-        p.indent()
-        p.print("method: \"\(sn).\(m.name)\",\n")
-        if m.arguments.isEmpty {
-            p.print("parameter: RTVoid(),\n")
-        } else {
-            p.print("parameter: Parameter(\(m.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
-        }
-        p.print("responseType: \(returnType).self\n")
-        p.outdent()
-        p.print(")\n")
         p.outdent()
         p.print("}\n")
     }
     
-    private func generateServerService(s: TService, printer p: inout CodePrinter) throws {
-        try self.generateServerServiceProtocol(s: s, printer: &p)
-        try self.generateServerServiceImplementation(s: s, printer: &p)
-    }
-    
-    private func generateServerServiceProtocol(s: TService, printer p: inout CodePrinter) throws {
+    private func generateServerServiceProtocol(service s: TService, printer p: inout CodePrinter) throws {
         let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
         p.print("protocol __RT\(s.name)Protocol: class {\n")
         p.indent()
         for method in methods {
             p.print("\n")
-            let returnType: String
-            if let rt = method.returnType {
-                returnType = try rt.generateSwiftTypeName(type: .server)
-            } else {
-                returnType = "RTVoid"
-            }
+            let returnType = try method.generateSwiftTypeName(type: .server)
             if method.arguments.isEmpty {
                 p.print("func \(method.name)(withCompletion completion: @escaping (RTResult<\(returnType), RTError>) -> Void)\n")
             } else {
@@ -119,7 +91,7 @@ public final class ServiceGenerator {
         p.print("\n")
     }
     
-    private func generateServerServiceImplementation(s: TService, printer p: inout CodePrinter) throws {
+    private func generateServerServiceImplementation(service s: TService, printer p: inout CodePrinter) throws {
         let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
         p.print("@objc(RT\(s.name))\n")
         p.print("class RT\(s.name): NSObject, __RT\(s.name)Protocol {\n")
@@ -129,7 +101,7 @@ public final class ServiceGenerator {
             p.print("@objc private func __\(method.name)(parameter: Data, completion: @escaping (Data) -> Void) {\n")
             p.indent()
             if !method.arguments.isEmpty {
-                try self.generateParameterStruct(type: .server, m: method, printer: &p)
+                try self.generateParameterStruct(type: .server, method: method, printer: &p)
                 p.print("let p: Parameter\n")
                 p.print("do {\n")
                 p.indent()
