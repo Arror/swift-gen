@@ -44,8 +44,8 @@ do {
     
     let generator = FileGenerator(thrift: thrift)
     
-    generator.generateThriftClientFile(printer: &client)
-    generator.generateThriftServerFile(printer: &server)
+    generator.generateFile(scope: .client, printer: &client)
+    generator.generateFile(scope: .server, printer: &server)
     
     try client.content.write(to: clientFileURL, atomically: true, encoding: .utf8)
     try server.content.write(to: serverFileURL, atomically: true, encoding: .utf8)

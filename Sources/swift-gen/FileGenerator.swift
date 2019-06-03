@@ -19,18 +19,11 @@ class FileGenerator {
         self.serviceGenerator = ServiceGenerator(services: thrift.services.map { $0.value })
     }
     
-    func generateThriftClientFile(printer p: inout CodePrinter) {
+    func generateFile(scope: Scope, printer p: inout CodePrinter) {
         self.generateFileHeader(printer: &p)
         self.enumGenerator.generateThriftEnums(scope: .client, printer: &p)
         self.structGenerator.generateThriftStructs(scope: .client, printer: &p)
         self.serviceGenerator.generateThriftService(scope: .client, printer: &p)
-    }
-    
-    func generateThriftServerFile(printer p: inout CodePrinter) {
-        self.generateFileHeader(printer: &p)
-        self.enumGenerator.generateThriftEnums(scope: .server, printer: &p)
-        self.structGenerator.generateThriftStructs(scope: .server, printer: &p)
-        self.serviceGenerator.generateThriftService(scope: .server, printer: &p)
     }
     
     private func generateFileHeader(printer p: inout CodePrinter) {
