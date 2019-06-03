@@ -7,7 +7,7 @@
 
 import Foundation
 
-class EnumGenerator {
+final class EnumGenerator {
     
     private let enums: [TEnum]
     
@@ -15,23 +15,23 @@ class EnumGenerator {
         self.enums = enums.sorted(by: { $0.name < $1.name })
     }
     
-    func generateThriftEnums(scope: Scope, printer p: inout CodePrinter) {
+    func generateThriftEnums(type: FileType, printer p: inout CodePrinter) {
         for e in self.enums {
-            self.generateEnum(scope: scope, e: e, printer: &p)
+            self.generateEnum(type: type, e: e, printer: &p)
         }
     }
     
-    private func generateEnum(scope: Scope, e: TEnum, printer p: inout CodePrinter) {
+    private func generateEnum(type: FileType, e: TEnum, printer p: inout CodePrinter) {
         let values = e.values.values.sorted { lhs, rhs in
             return lhs.value < rhs.value
         }
-        let control: String = (scope == .client) ? "public " : ""
-        p.print("\(control)enum \(scope.prefix)\(e.name): Int, Codable, CaseIterable {\n")
+        let control: String = (type == .client) ? "public " : ""
+        p.print("\(control)enum \(type.prefix)\(e.name): Int, Codable, CaseIterable {\n")
         p.indent()
         values.forEach { v in
             p.print("case \(v.name) = \(v.value)\n")
         }
-        if scope == .client {
+        if type == .client {
             self.generateEnumInit(values: values, printer: &p)
         }
         p.outdent()
@@ -43,10 +43,10 @@ class EnumGenerator {
         p.print("public init?(rawValue: Int) {\n")
         p.indent()
         p.print("switch rawValue {\n")
-        values.forEach { v in
-            p.print("case \(v.value):\n")
+        for value in values {
+            p.print("case \(value.value):\n")
             p.indent()
-            p.print("self = .\(v.name)\n")
+            p.print("self = .\(value.name)\n")
             p.outdent()
         }
         p.print("default:\n")

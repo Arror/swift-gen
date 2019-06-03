@@ -7,7 +7,7 @@
 
 import Foundation
 
-class StructGenerator {
+final class StructGenerator {
     
     private let structs: [TStruct]
     
@@ -15,29 +15,29 @@ class StructGenerator {
         self.structs = structs.sorted(by: { $0.name < $1.name })
     }
     
-    func generateThriftStructs(scope: Scope, printer p: inout CodePrinter) {
+    func generateThriftStructs(type: FileType, printer p: inout CodePrinter) {
         for s in self.structs {
-            self.generateStruct(scope: scope, s: s, printer: &p)
+            self.generateStruct(type: type, s: s, printer: &p)
         }
     }
     
-    private func generateStruct(scope: Scope,  s: TStruct, printer p: inout CodePrinter) {
-        let control: String = (scope == .client) ? "public " : ""
-        p.print("\(control)struct \(scope.prefix)\(s.name): Codable {\n")
+    private func generateStruct(type: FileType,  s: TStruct, printer p: inout CodePrinter) {
+        let control: String = (type == .client) ? "public " : ""
+        p.print("\(control)struct \(type.prefix)\(s.name): Codable {\n")
         p.indent()
         s.fields.forEach { field in
-            p.print("\(control)let \(field.name): \(field.generateSwiftTypeName(scope: scope))\n")
+            p.print("\(control)let \(field.name): \(field.generateSwiftTypeName(type: type))\n")
         }
-        if scope == .client {
-            self.generateStructInit(scope: scope, values: s.fields, printer: &p)
+        if type == .client {
+            self.generateStructInit(type: type, values: s.fields, printer: &p)
         }
         p.outdent()
         p.print("}\n")
         p.print("\n")
     }
     
-    private func generateStructInit(scope: Scope, values: [TField], printer p: inout CodePrinter) {
-        p.print("public init(\(values.map({ "\($0.name): \($0.generateSwiftTypeName(scope: scope))" }).joined(separator: ", "))) {\n")
+    private func generateStructInit(type: FileType, values: [TField], printer p: inout CodePrinter) {
+        p.print("public init(\(values.map({ "\($0.name): \($0.generateSwiftTypeName(type: type))" }).joined(separator: ", "))) {\n")
         p.indent()
         values.forEach { v in
             p.print("self.\(v.name) = \(v.name)\n")

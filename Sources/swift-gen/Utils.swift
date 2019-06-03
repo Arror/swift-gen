@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Scope {
+enum FileType {
     
     case client
     case server
@@ -24,19 +24,19 @@ enum Scope {
 
 extension TField {
     
-    func generateSwiftTypeName(scope: Scope) -> String {
+    func generateSwiftTypeName(type: FileType) -> String {
         guard
-            let type = self.type else {
+            let t = self.type else {
                 fatalError("Invlaid field type.")
         }
-        return "\(type.generateSwiftTypeName(scope: scope))\(self.isOptional ? "?" : "")"
+        return "\(t.generateSwiftTypeName(type: type))\(self.isOptional ? "?" : "")"
     }
 }
 
 
 extension TType {
     
-    func generateSwiftTypeName(scope: Scope) -> String {
+    func generateSwiftTypeName(type: FileType) -> String {
         let reval: String
         switch self.name {
         case "map", "set", "byte":
@@ -60,9 +60,9 @@ extension TType {
                     print("Unsupport type: \(self.name).")
                     exit(0)
             }
-            reval = "[\(TType(name: vt.name, valueType: .none).generateSwiftTypeName(scope: scope))]"
+            reval = "[\(TType(name: vt.name, valueType: .none).generateSwiftTypeName(type: type))]"
         default:
-            reval = "\(scope.prefix)\(self.name)"
+            reval = "\(type.prefix)\(self.name)"
         }
         return reval
     }
