@@ -17,11 +17,11 @@ final class EnumGenerator {
     
     func generateThriftEnums(type: FileType, printer p: inout CodePrinter) {
         for e in self.enums {
-            self.generateEnum(type: type, e: e, printer: &p)
+            self.generateEnum(type: type, enum: e, printer: &p)
         }
     }
     
-    private func generateEnum(type: FileType, e: TEnum, printer p: inout CodePrinter) {
+    private func generateEnum(type: FileType, enum e: TEnum, printer p: inout CodePrinter) {
         let values = e.values.values.sorted { lhs, rhs in
             return lhs.value < rhs.value
         }
