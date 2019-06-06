@@ -109,7 +109,7 @@ public final class ServiceGenerator {
                 p.outdent()
                 p.print("} catch {\n")
                 p.indent()
-                p.print("completion(RTResult<RTVoid, RTError>.failure(RTError(code: .encodeError, errorDescription: error.localizedDescription)).data)\n")
+                p.print("completion(RTResult<RTVoid, RTError>.failure(RTError(code: .decodeError, errorDescription: error.localizedDescription)).data)\n")
                 p.print("return\n")
                 p.outdent()
                 p.print("}\n")
