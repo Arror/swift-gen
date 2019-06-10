@@ -24,21 +24,23 @@ do {
     let thrifts = try JSONDecoder().decode(TThrifts.self, from: data)
     
     guard
-        thrifts.version == "2.0" else {
+        thrifts.version == "3.0" else {
             throw GeneratorError("Version of thrift 2.0 is required.")
     }
     
     Global.clientNamespace = thrifts.clientNamespcae
     Global.serverNamespace = thrifts.serverNamespace
     
-    let dirURL = URL(fileURLWithPath: thrifts.output)
+    let clientDirURL = URL(fileURLWithPath: thrifts.clientOutput)
+    let serverDirURL = URL(fileURLWithPath: thrifts.serverOutput)
     
-    try FileManager.default.createDirectory(at: dirURL)
+    try FileManager.default.createDirectory(at: clientDirURL)
+    try FileManager.default.createDirectory(at: serverDirURL)
     
     let name = URL(fileURLWithPath: thrifts.input).deletingPathExtension().lastPathComponent.firstUppercased()
     
-    let clientFileURL = dirURL.appendingPathComponent("\(name).c.swift")
-    let serverFileURL = dirURL.appendingPathComponent("\(name).s.swift")
+    let clientFileURL = clientDirURL.appendingPathComponent("\(name).c.swift")
+    let serverFileURL = serverDirURL.appendingPathComponent("\(name).s.swift")
     
     guard
         let thrift = thrifts.thrifts[thrifts.input] else {

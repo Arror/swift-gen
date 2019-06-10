@@ -47,15 +47,15 @@ public final class ServiceGenerator {
             let returnType = try method.generateSwiftTypeName(type: .client)
             let arguments = try method.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .client))" }).joined(separator: ", ")
             if method.arguments.isEmpty {
-                p.print("public static func \(method.name)() throws -> RTRequest<\(returnType)> {\n")
+                p.print("public static func \(method.name)() -> RTClientRequest<\(returnType)> {\n")
             } else {
-                p.print("public static func \(method.name)(\(arguments)) throws -> RTRequest<\(returnType)> {\n")
+                p.print("public static func \(method.name)(\(arguments)) -> RTClientRequest<\(returnType)> {\n")
                 p.indent()
                 try self.generateParameterStruct(type: .client, method: method, printer: &p)
                 p.outdent()
             }
             p.indent()
-            p.print("return try RTRequest(\n")
+            p.print("return RTClientRequest(\n")
             p.indent()
             p.print("method: \"\(s.name).\(method.name)\",\n")
             if method.arguments.isEmpty {
@@ -98,27 +98,23 @@ public final class ServiceGenerator {
         p.indent()
         for method in methods {
             p.print("\n")
-            p.print("@objc private func __\(method.name)(parameter: Data, completion: RTCompletion) {\n")
+            p.print("@objc private func __\(method.name)(request: RTServerRequest) {\n")
             p.indent()
-            if !method.arguments.isEmpty {
+            if method.arguments.isEmpty {
+                p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): p.\($0.name)" }).joined(separator: ", "))) { request.completionHandler($0.dataResult()) }\n")
+            } else {
                 try self.generateParameterStruct(type: .server, method: method, printer: &p)
-                p.print("let p: Parameter\n")
-                p.print("do {\n")
+                p.print("switch request.parse(parameterType: Parameter.self) {\n")
+                p.print("case .success(let p):\n")
                 p.indent()
-                p.print("p = try JSONDecoder().decode(Parameter.self, from: parameter)\n")
+                p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): p.\($0.name)" }).joined(separator: ", "))) { request.completionHandler($0.dataResult()) }\n")
                 p.outdent()
-                p.print("} catch {\n")
+                p.print("case .failure(let e):\n")
                 p.indent()
-                p.print("completion.c(.failure(RTError(code: .decodeError, errorDescription: error.localizedDescription)))\n")
-                p.print("return\n")
+                p.print("request.completionHandler(.failure(e))\n")
                 p.outdent()
                 p.print("}\n")
             }
-            p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): p.\($0.name)" }).joined(separator: ", "))) {\n")
-            p.indent()
-            p.print("completion.c($0.dataResult())\n")
-            p.outdent()
-            p.print("}\n")
             p.outdent()
             p.print("}\n")
         }
