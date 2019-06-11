@@ -47,15 +47,15 @@ public final class ServiceGenerator {
             let returnType = try method.generateSwiftTypeName(type: .client)
             let arguments = try method.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .client))" }).joined(separator: ", ")
             if method.arguments.isEmpty {
-                p.print("public static func \(method.name)() -> RTClientRequest<\(returnType)> {\n")
+                p.print("public static func \(method.name)(withCompletion completion: @escaping (RTResult<\(returnType), RTError>) -> Void) {\n")
             } else {
-                p.print("public static func \(method.name)(\(arguments)) -> RTClientRequest<\(returnType)> {\n")
+                p.print("public static func \(method.name)(\(arguments), completion: @escaping (RTResult<\(returnType), RTError>) -> Void) {\n")
                 p.indent()
                 try self.generateParameterStruct(type: .client, method: method, printer: &p)
                 p.outdent()
             }
             p.indent()
-            p.print("return RTClientRequest(\n")
+            p.print("RTSession.shared.invoke(\n")
             p.indent()
             p.print("method: \"\(s.name).\(method.name)\",\n")
             if method.arguments.isEmpty {
@@ -63,7 +63,7 @@ public final class ServiceGenerator {
             } else {
                 p.print("parameter: Parameter(\(method.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
             }
-            p.print("responseType: \(returnType).self\n")
+            p.print("completion: completion\n")
             p.outdent()
             p.print(")\n")
             p.outdent()
