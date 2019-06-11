@@ -25,7 +25,7 @@ do {
     
     guard
         thrifts.version == "3.0" else {
-            throw GeneratorError("Version of thrift 2.0 is required.")
+            throw GeneratorError("Version of thrift 3.0 is required.")
     }
     
     Global.clientNamespace = thrifts.clientNamespcae
