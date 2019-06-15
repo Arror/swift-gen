@@ -47,19 +47,19 @@ public final class ServiceGenerator {
             let returnType = try method.generateSwiftTypeName(type: .client)
             let arguments = try method.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .client))" }).joined(separator: ", ")
             if method.arguments.isEmpty {
-                p.print("public static func \(method.name)(withCompletion completion: @escaping (RTResult<\(returnType), RTError>) -> Void) {\n")
+                p.print("public static func \(method.name)(withCompletion completion: @escaping (Swift.Result<\(returnType), Error>) -> Void) -> Bool {\n")
             } else {
-                p.print("public static func \(method.name)(\(arguments), completion: @escaping (RTResult<\(returnType), RTError>) -> Void) {\n")
+                p.print("public static func \(method.name)(\(arguments), completion: @escaping (Swift.Result<\(returnType), Error>) -> Void) -> Bool {\n")
                 p.indent()
                 try self.generateParameterStruct(type: .client, method: method, printer: &p)
                 p.outdent()
             }
             p.indent()
-            p.print("RTSession.shared.invoke(\n")
+            p.print("return CloverKit.Session.shared.invoke(\n")
             p.indent()
             p.print("method: \"\(s.name).\(method.name)\",\n")
             if method.arguments.isEmpty {
-                p.print("parameter: RTVoid(),\n")
+                p.print("parameter: CloverKit.Empty(),\n")
             } else {
                 p.print("parameter: Parameter(\(method.arguments.map({ "\($0.name): \($0.name)" }).joined(separator: ", "))),\n")
             }
@@ -75,15 +75,15 @@ public final class ServiceGenerator {
     
     private func generateServerServiceProtocol(service s: TService, printer p: inout CodePrinter) throws {
         let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
-        p.print("protocol __RT\(s.name)Protocol: class {\n")
+        p.print("protocol __CK\(s.name)Protocol: class {\n")
         p.indent()
         for method in methods {
             p.print("\n")
             let returnType = try method.generateSwiftTypeName(type: .server)
             if method.arguments.isEmpty {
-                p.print("func \(method.name)(withCompletion completion: @escaping (RTResult<\(returnType), RTError>) -> Void)\n")
+                p.print("func \(method.name)(withCompletion completion: @escaping (Swift.Result<\(returnType), Swift.Error>) -> Void) -> Bool\n")
             } else {
-                p.print("func \(method.name)(\(try method.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .server))" }).joined(separator: ", ")), completion: @escaping (RTResult<\(returnType), RTError>) -> Void)\n")
+                p.print("func \(method.name)(\(try method.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .server))" }).joined(separator: ", ")), completion: @escaping (Swift.Result<\(returnType), Swift.Error>) -> Void) -> Bool\n")
             }
         }
         p.outdent()
@@ -93,25 +93,25 @@ public final class ServiceGenerator {
     
     private func generateServerServiceImplementation(service s: TService, printer p: inout CodePrinter) throws {
         let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
-        p.print("@objc(RT\(s.name))\n")
-        p.print("class RT\(s.name): NSObject, __RT\(s.name)Protocol {\n")
+        p.print("@objc(CK\(s.name))\n")
+        p.print("class CK\(s.name): NSObject, __CK\(s.name)Protocol {\n")
         p.indent()
         for method in methods {
             p.print("\n")
-            p.print("@objc private func __\(method.name)(request: RTServerRequest) {\n")
+            p.print("@objc private func __\(method.name)(handler: CloverKit.Handler) -> Bool {\n")
             p.indent()
             if method.arguments.isEmpty {
-                p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): p.\($0.name)" }).joined(separator: ", "))) { request.completionHandler($0.dataResult()) }\n")
+                p.print("return self.\(method.name) { result in\n")
+                p.indent()
+                self.generateServerHandler(printer: &p)
+                p.outdent()
+                p.print("}\n")
             } else {
                 try self.generateParameterStruct(type: .server, method: method, printer: &p)
-                p.print("switch request.parse(parameterType: Parameter.self) {\n")
-                p.print("case .success(let p):\n")
+                self.generateParameterDecode(printer: &p)
+                p.print("return self.\(method.name)(\(method.arguments.map({ "\($0.name): p.\($0.name)" }).joined(separator: ", "))) { result in\n")
                 p.indent()
-                p.print("self.\(method.name)(\(method.arguments.map({ "\($0.name): p.\($0.name)" }).joined(separator: ", "))) { request.completionHandler($0.dataResult()) }\n")
-                p.outdent()
-                p.print("case .failure(let e):\n")
-                p.indent()
-                p.print("request.completionHandler(.failure(e))\n")
+                self.generateServerHandler(printer: &p)
                 p.outdent()
                 p.print("}\n")
             }
@@ -120,5 +120,35 @@ public final class ServiceGenerator {
         }
         p.outdent()
         p.print("}\n")
+    }
+    
+    private func generateParameterDecode(printer p: inout CodePrinter) {
+        p.print("let p: Parameter\n")
+        p.print("do {\n")
+        p.indent()
+        p.print("p = try JSONDecoder().decode(Parameter.self, from: handler.parameter)\n")
+        p.outdent()
+        p.print("} catch {\n")
+        p.indent()
+        p.print("handler.completion(.failure(error))\n")
+        p.print("return false\n")
+        p.outdent()
+        p.print("}\n")
+    }
+    
+    private func generateServerHandler(printer p: inout CodePrinter) {
+        p.print("handler.completion(result.flatMap {\n")
+        p.indent()
+        p.print("do {\n")
+        p.indent()
+        p.print("return .success(try JSONEncoder().encode($0))\n")
+        p.outdent()
+        p.print("} catch {\n")
+        p.indent()
+        p.print("return .failure(error)\n")
+        p.outdent()
+        p.print("}\n")
+        p.outdent()
+        p.print("})\n")
     }
 }

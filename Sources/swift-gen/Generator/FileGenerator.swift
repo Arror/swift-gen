@@ -33,7 +33,7 @@ public final class FileGenerator {
         p.print("//\n")
         p.print("\n")
         p.print("import Foundation\n")
-        p.print("import RTSession\n")
+        p.print("import CloverKit\n")
         p.print("\n")
     }
 }

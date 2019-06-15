@@ -28,7 +28,7 @@ extension TMethod {
         if let t = self.returnType {
             return try t.generateSwiftTypeName(type: type)
         } else {
-            return "RTVoid"
+            return "CloverKit.Empty"
         }
     }
 }
