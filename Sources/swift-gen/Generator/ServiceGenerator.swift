@@ -108,30 +108,25 @@ public final class ServiceGenerator {
                 p.print("}\n")
             } else {
                 try self.generateParameterStruct(type: .server, method: method, printer: &p)
-                self.generateParameterDecode(printer: &p)
+                p.print("do {\n")
+                p.indent()
+                p.print("let p = try JSONDecoder().decode(Parameter.self, from: handler.parameter)\n")
                 p.print("return self.\(method.name)(\(method.arguments.map({ "\($0.name): p.\($0.name)" }).joined(separator: ", "))) { result in\n")
                 p.indent()
                 self.generateServerHandler(printer: &p)
+                p.outdent()
+                p.print("}\n")
+                p.outdent()
+                p.print("} catch {\n")
+                p.indent()
+                p.print("handler.completion(.failure(error))\n")
+                p.print("return false\n")
                 p.outdent()
                 p.print("}\n")
             }
             p.outdent()
             p.print("}\n")
         }
-        p.outdent()
-        p.print("}\n")
-    }
-    
-    private func generateParameterDecode(printer p: inout CodePrinter) {
-        p.print("let p: Parameter\n")
-        p.print("do {\n")
-        p.indent()
-        p.print("p = try JSONDecoder().decode(Parameter.self, from: handler.parameter)\n")
-        p.outdent()
-        p.print("} catch {\n")
-        p.indent()
-        p.print("handler.completion(.failure(error))\n")
-        p.print("return false\n")
         p.outdent()
         p.print("}\n")
     }
