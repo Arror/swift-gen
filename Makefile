@@ -1,6 +1,8 @@
 build:
 	swift build -c release
 	cp .build/x86_64-apple-macosx/release/swift-gen ./
+
+build-zip: build
 	zip -r swift-gen swift-gen
 	rm -f swift-gen
 
