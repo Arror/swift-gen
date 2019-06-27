@@ -41,23 +41,42 @@ public final class ServiceGenerator {
     private func generateClientService(service s: TService, printer p: inout CodePrinter) throws {
         let methods = s.methods.map({ $0.value }).sorted(by: { $0.name < $1.name })
         p.print("public enum \(s.name) {\n")
+        p.print("\n")
         p.indent()
         for method in methods {
-            p.print("\n")
             let returnType = try method.generateSwiftTypeName(type: .client)
-            let arguments = try method.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .client))" }).joined(separator: ", ")
             if method.arguments.isEmpty {
-                p.print("public static func \(method.name)(withCompletion completion: @escaping (Swift.Result<\(returnType), Error>) -> Void) -> Bool {\n")
+                p.print("case \(method.name)(completion: (Swift.Result<\(returnType), Error>) -> Void)\n")
             } else {
-                p.print("public static func \(method.name)(\(arguments), completion: @escaping (Swift.Result<\(returnType), Error>) -> Void) -> Bool {\n")
-                p.indent()
-                try self.generateParameterStruct(type: .client, method: method, printer: &p)
-                p.outdent()
+                let arguments = try method.arguments.map({ "\($0.name): \(try $0.generateSwiftTypeName(type: .client))" }).joined(separator: ", ")
+                p.print("case \(method.name)(\(arguments), completion: (Swift.Result<\(returnType), Error>) -> Void)\n")
+            }
+        }
+        p.print("\n")
+        p.print("public enum Methods: String, CaseIterable {\n")
+        p.indent()
+        for method in methods {
+            p.print("case \(method.name) = \"\(s.name).\(method.name)\"\n")
+        }
+        p.outdent()
+        p.print("}\n")
+        p.print("\n")
+        p.print("public func invoke(by session: CloverKit.Session = .shared) -> Bool {\n")
+        p.indent()
+        p.print("switch self {\n")
+        for method in methods {
+            if method.arguments.isEmpty {
+                p.print("case .\(method.name)(let completion):\n")
+            } else {
+                p.print("case .\(method.name)(\(method.arguments.map({ "let \($0.name)" }).joined(separator: ", ")), let completion):\n")
             }
             p.indent()
-            p.print("return CloverKit.Session.shared.invoke(\n")
+            if !method.arguments.isEmpty {
+                try self.generateParameterStruct(type: .client, method: method, printer: &p)
+            }
+            p.print("return session.invoke(\n")
             p.indent()
-            p.print("method: \"\(s.name).\(method.name)\",\n")
+            p.print("method: Methods.\(method.name).rawValue,\n")
             if method.arguments.isEmpty {
                 p.print("parameter: CloverKit.Empty(),\n")
             } else {
@@ -67,8 +86,10 @@ public final class ServiceGenerator {
             p.outdent()
             p.print(")\n")
             p.outdent()
-            p.print("}\n")
         }
+        p.print("}\n")
+        p.outdent()
+        p.print("}\n")
         p.outdent()
         p.print("}\n")
     }
