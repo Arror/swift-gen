@@ -39,7 +39,7 @@ extension TField {
         if let t = self.type {
             return "\(try t.generateSwiftTypeName(type: type))\(self.isOptional ? "?" : "")"
         } else {
-            throw GeneratorError("Invlaid filed type, filed name: \(self.name)")
+            throw GeneratorError(errorDescription: "Invlaid filed type, filed name: \(self.name)")
         }
     }
 }
@@ -53,7 +53,7 @@ extension TType {
     public func generateSwiftTypeName(type: FileType) throws -> String {
         guard
             !TType.unsupportedThriftTypes.contains(self.name) else {
-                throw GeneratorError("Unsupport type: \(self.name).")
+                throw GeneratorError(errorDescription: "Unsupport type: \(self.name).")
         }
         let reval: String
         switch self.name {
@@ -72,7 +72,7 @@ extension TType {
         case "list":
             guard
                 let valueType = self.valueType, TType.unsupportedThriftElementTypes.contains(valueType.name) else {
-                    throw GeneratorError("Unsupport element type: \(self.name).")
+                    throw GeneratorError(errorDescription: "Unsupport element type: \(self.name).")
             }
             reval = "[\(try TType(name: valueType.name, valueType: .none).generateSwiftTypeName(type: type))]"
         default:
