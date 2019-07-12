@@ -157,7 +157,7 @@ public final class ServiceGenerator {
         p.indent()
         p.print("do {\n")
         p.indent()
-        p.print("return .success(try JSONEncoder().encode($0))\n")
+        p.print("return .success(try JSONEncoder().encode(TopLevelWrapper(value: $0)))\n")
         p.outdent()
         p.print("} catch {\n")
         p.indent()
